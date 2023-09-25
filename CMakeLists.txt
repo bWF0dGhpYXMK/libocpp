@@ -1,127 +1,142 @@
-cmake_minimum_required(VERSION 3.14)
+# OCPP library
+add_library(ocpp)
+add_library(everest::ocpp ALIAS ocpp)
 
-project(ocpp
-    VERSION 0.9.1
-    DESCRIPTION "A C++ implementation of the Open Charge Point Protocol"
-    LANGUAGES CXX
+target_sources(ocpp
+    PRIVATE
+        # lib/lib/ocpp/common/websocket/websocket_base.cpp
+        # lib/lib/ocpp/common/charging_station_base.cpp
+        # # lib/lib/ocpp/common/database_handler.cpp
+        # lib/lib/ocpp/common/message_queue.cpp
+        # lib/lib/ocpp/common/ocpp_logging.cpp
+        # lib/lib/ocpp/common/pki_handler.cpp
+        # lib/lib/ocpp/common/schemas.cpp
+        # lib/lib/ocpp/common/types.cpp
+        # lib/lib/ocpp/v16/charge_point.cpp
+        # lib/lib/ocpp/v16/smart_charging.cpp
+        # lib/lib/ocpp/v16/charge_point_configuration.cpp
+        # lib/lib/ocpp/v16/charge_point_state_machine.cpp
+        # lib/lib/ocpp/v16/transaction.cpp
+        # lib/lib/ocpp/v16/enums.cpp
+        # lib/lib/ocpp/v16/ocpp_types.cpp
+        # lib/lib/ocpp/v16/types.cpp
+        # lib/lib/ocpp/v201/charge_point.cpp
+        # # lib/lib/ocpp/v201/device_model_management.cpp
+        # lib/lib/ocpp/v201/enums.cpp
+        # lib/lib/ocpp/v201/ocpp_types.cpp
+        # lib/lib/ocpp/v201/types.cpp
+        # lib/lib/ocpp/v201/connector.cpp
+        # lib/lib/ocpp/v201/evse.cpp
+        lib/ocpp/common/database_handler_base.cpp
+        lib/ocpp/common/websocket/websocket_plain.cpp
+        lib/ocpp/common/websocket/websocket_tls.cpp
+        lib/ocpp/common/websocket/websocket.cpp
+        lib/ocpp/common/websocket/websocket_base.cpp
+        lib/ocpp/common/call_types.cpp
+        lib/ocpp/common/charging_station_base.cpp
+        lib/ocpp/common/message_queue.cpp
+        lib/ocpp/common/ocpp_logging.cpp
+        lib/ocpp/common/pki_handler.cpp
+        lib/ocpp/common/schemas.cpp
+        lib/ocpp/common/types.cpp
+        lib/ocpp/common/utils.cpp
+        lib/ocpp/v16/charge_point.cpp
+        lib/ocpp/v16/database_handler.cpp
+        lib/ocpp/v16/charge_point_impl.cpp
+        lib/ocpp/v16/smart_charging.cpp
+        lib/ocpp/v16/charge_point_configuration.cpp
+        lib/ocpp/v16/charge_point_state_machine.cpp
+        lib/ocpp/v16/transaction.cpp
+        lib/ocpp/v16/enums.cpp
+        lib/ocpp/v16/ocpp_types.cpp
+        lib/ocpp/v16/types.cpp
+        lib/ocpp/v201/charge_point.cpp
+        lib/ocpp/v201/database_handler.cpp
+        lib/ocpp/v201/device_model_storage_sqlite.cpp
+        lib/ocpp/v201/device_model.cpp
+        lib/ocpp/v201/transaction.cpp
+        lib/ocpp/v201/enums.cpp
+        lib/ocpp/v201/ocpp_types.cpp
+        lib/ocpp/v201/types.cpp
+        lib/ocpp/v201/connector.cpp
+        lib/ocpp/v201/evse.cpp
+        lib/ocpp/v201/utils.cpp        
+        #lib/ocpp/v201/device_model_management.cpp
+        #lib/ocpp/v201/device_model_management_base.cpp
+        lib/ocpp/v201/ctrlr_component_variables.cpp
+
 )
 
-find_package(everest-cmake 0.1 REQUIRED
-    PATHS ../everest-cmake
+#optimization flags
+target_compile_options(ocpp
+    PUBLIC
+        # -fno-rtti
+        -Os
+        -fPIC
+        -ffunction-sections 
+        -fdata-sections
+        -g0
+        -s
+        -Wl,--gc-sections
+        -Wl,--strip-all
+
+        
+)
+target_link_options(ocpp
+    PRIVATE
+        -ffunction-sections 
+        -fdata-sections
+        -Wl,--gc-sections
+        -Wl,--strip-all
 )
 
-# options
-option(BUILD_TESTING "Run unit tests" OFF)
-option(CMAKE_RUN_CLANG_TIDY "Run clang-tidy" OFF)
-option(LIBOCPP_BUILD_EXAMPLES "Build charge_point and central_system binaries." OFF)
-option(OCPP_INSTALL "Install the library (shared data might be installed anyway)" ${EVC_MAIN_PROJECT})
-option(USE_NON_STD_FILESYSTEM "Usage of boost/filesystem.hpp instead of std::filesystem" OFF)
 
-if (USE_NON_STD_FILESYSTEM)
-    message(VERBOSE "INFO: using boost::filesystem instead std::filesystem (`USE_NON_STD_FILESYSTEM` set)")
-    set(BOOSTFILESYSTEM ON)
-    add_definitions(-DBOOSTFILESYSTEM)
-    add_definitions(-DBOOST_FILESYSTEM_VERSION=3)
-else()
-    set(BOOSTFILESYSTEM OFF)
-endif()
+add_subdirectory(lib/ocpp/common/websocket)
+add_subdirectory(lib/ocpp/v16/messages)
+add_subdirectory(lib/ocpp/v201/messages)
 
 
-# dependencies
-find_package(Boost COMPONENTS program_options regex system thread REQUIRED)
-find_package(SQLite3 REQUIRED)
-find_package(OpenSSL REQUIRED)
+target_include_directories(ocpp
+    PUBLIC
+        $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:${CMAKE_INSTALL_INCLUDEDIR}>
+)
 
-if(NOT DISABLE_EDM)
-    evc_setup_edm()
+target_link_libraries(ocpp
+    PUBLIC
+        everest::log
+        everest::timer
+        fsm::fsm
+        websocketpp::websocketpp
 
-    # In EDM mode, we can't install exports (because the dependencies usually do not install their exports)
-    set(OCPP_INSTALL OFF)
-
-    # FIXME (aw): websocketpp doesn't play well with EDM/CPM
-    add_library(websocketpp::websocketpp INTERFACE IMPORTED)
-    set_target_properties(websocketpp::websocketpp PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "${websocketpp_SOURCE_DIR}")
-
-else()
-    find_package(date REQUIRED)
-    find_package(nlohmann_json REQUIRED)
-    find_package(nlohmann_json_schema_validator REQUIRED)
-    find_package(websocketpp REQUIRED)
+    PRIVATE
+        OpenSSL::SSL
+        OpenSSL::Crypto
+        sqlite3
+        Threads::Threads
+        nlohmann_json::nlohmann_json
+        nlohmann_json_schema_validator
+        date::date-tz
     
-    find_package(fsm REQUIRED)
-    find_package(everest-timer REQUIRED)
-    find_package(everest-log REQUIRED)
+)
+
+if(BOOSTFILESYSTEM) 
+target_link_libraries(ocpp
+    PRIVATE
+  		Boost::filesystem
+)
 endif()
 
-# library code
-add_subdirectory(lib)
+message("Here" ${CXX_STANDARD})
 
-# config and auxillary files
-add_subdirectory(config)
+# FIXME (aw): right now nlohmann_json and boost::optional don't compile
+#             with gcc 10.x and C++11/14, so we need to publish the
+#             C++17 standard
+target_compile_features(ocpp PUBLIC cxx_std_17)
 
-
-# packaging
-if (OCPP_INSTALL)
-    install(
-        TARGETS ocpp
-        EXPORT ocpp-targets
-    )
-
-    install(
-        DIRECTORY include/
-        TYPE INCLUDE
-    )
-
-    evc_setup_package(
-        NAME everest-ocpp
-        NAMESPACE everest
-        EXPORT ocpp-targets
-        ADDITIONAL_CONTENT
-            "find_dependency(OpenSSL)"
-            "find_dependency(SQLite3)"
-            "find_dependency(websocketpp)"
-            "find_dependency(everest-timer)"
-    )
-endif()
-
-
-if(LIBOCPP16_BUILD_EXAMPLES)
-    message("Building libocpp 1.6 example binaries.")
-    add_subdirectory(src)
-else()
-    message("Not building libocpp 1.6 example binaries.")
-endif()
-
-# configure clang-tidy if requested
-if(CMAKE_RUN_CLANG_TIDY)
-    message("Running clang-tidy")
-    string(CONCAT CLANG_TIDY_CHECKS "*,"
-                                    "-llvmlibc*,"
-                                    "-fuchsia-default-arguments-calls,"
-                                    "-fuchsia-overloaded-operator,"
-                                    "-fuchsia-statically-constructed-objects,"
-                                    "-readability-function-cognitive-complexity,"
-                                    "-modernize-use-trailing-return-type,"
-                                    "-abseil-string-find-startswith,"
-                                    "-abseil-string-find-str-contains,"
-                                    ";")
-    set(CMAKE_CXX_CLANG_TIDY
-    clang-tidy;
-    -header-filter='.*'
-    -checks=${CLANG_TIDY_CHECKS}
-    -export-fixes=clang-tidy-fixes.yaml)
-endif()
-
-if(BUILD_TESTING_LIBOCPP)
-    add_subdirectory(tests)
-endif()
-
-# build doxygen documentation if doxygen is available
-find_package(Doxygen)
-if(DOXYGEN_FOUND)
-    set(DOXYGEN_OUTPUT_DIRECTORY dist/docs)
-    set(DOXYGEN_USE_MDFILE_AS_MAINPAGE README.md)
-    doxygen_add_docs(doxygen-${PROJECT_NAME} README.md include lib src)
-else()
-    message("Doxygen is needed to generate documentation")
-endif()
+#install into system directories
+install(TARGETS ocpp
+    LIBRARY DESTINATION lib
+    ARCHIVE DESTINATION libocpp
+    INCLUDES DESTINATION include
+)
