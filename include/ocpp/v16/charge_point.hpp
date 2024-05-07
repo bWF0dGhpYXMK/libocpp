@@ -308,6 +308,9 @@ public:
     /// \param tech_info additional info of the security event
     void on_security_event(const std::string& type, const std::string& tech_info);
 
+    // \brief Reset the ocpp logging
+    void reset_ocpp_log_files();
+
     /// \brief Handles an internal ChangeAvailabilityRequest (in the same way as if it was emitted by the CSMS).
     /// \param request
     ChangeAvailabilityResponse on_change_availability(const ChangeAvailabilityRequest& request);

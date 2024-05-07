@@ -3306,6 +3306,10 @@ void ChargePointImpl::on_max_current_offered(int32_t connector, int32_t max_curr
     this->connectors.at(connector)->max_current_offered = max_current;
 }
 
+void ChargePointImpl::reset_ocpp_log_files() {
+    this->logging->reset_ocpp_log_files();
+}
+
 void ChargePointImpl::on_max_power_offered(int32_t connector, int32_t max_power) {
     std::lock_guard<std::mutex> lock(measurement_mutex);
     // TODO(kai): uses power meter mutex because the reading context is similar, think about storing

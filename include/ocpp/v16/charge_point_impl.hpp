@@ -614,6 +614,9 @@ public:
     /// \param request
     ChangeAvailabilityResponse on_change_availability(const ChangeAvailabilityRequest& request);
 
+    /// \brief Reset the ocpp logging
+    void reset_ocpp_log_files();
+
     /// registers a \p callback function that can be used to receive a arbitrary data transfer for the given \p
     /// vendorId and \p messageId
     /// \param vendorId

@@ -62,6 +62,7 @@ public:
     void stop_session_logging(const std::string& session_id);
     std::string get_message_log_path();
     bool session_logging_active();
+    void reset_ocpp_log_files();
 };
 
 } // namespace ocpp

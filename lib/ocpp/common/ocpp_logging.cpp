@@ -217,6 +217,29 @@ FormattedMessageWithType MessageLogging::format_message(const std::string& messa
     return {extracted_message_type, formatted_message};
 }
 
+void MessageLogging::reset_ocpp_log_files() {
+    if (this->log_messages) {
+        if (this->log_to_file) {
+            this->output_file.close();
+        }
+
+        if (this->log_to_html) {
+            this->html_log_file << "</table></body></html>\n";
+            this->html_log_file.close();
+        }
+
+        if (this->log_security) {
+            this->security_log_file.close();
+        }
+        if (this->session_logging) {
+        	std::scoped_lock lock(this->session_id_logging_mutex);
+        	for (auto const& [session_id, logging] : this->session_id_logging) {
+        		logging->reset_ocpp_log_files();
+        	}
+        }
+    }
+}
+
 void MessageLogging::start_session_logging(const std::string& session_id, const std::string& log_path) {
     std::scoped_lock lock(this->session_id_logging_mutex);
     this->session_id_logging[session_id] = std::make_shared<ocpp::MessageLogging>(

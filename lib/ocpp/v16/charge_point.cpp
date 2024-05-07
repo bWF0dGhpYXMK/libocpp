@@ -179,6 +179,10 @@ ChangeAvailabilityResponse ChargePoint::on_change_availability(const ChangeAvail
     return this->charge_point->on_change_availability(request);
 }
 
+void reset_ocpp_log_files() {
+    this->charge_point->reset_ocpp_log_files();
+}
+
 void ChargePoint::register_data_transfer_callback(
     const CiString<255>& vendorId, const CiString<50>& messageId,
     const std::function<DataTransferResponse(const std::optional<std::string>& msg)>& callback) {
